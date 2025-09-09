@@ -1,0 +1,13 @@
+CREATE TABLE users (id BIGSERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL, enabled BOOLEAN DEFAULT TRUE);
+CREATE TABLE customer_profiles (id BIGINT PRIMARY KEY REFERENCES users(id), first_name TEXT, last_name TEXT, national_id TEXT UNIQUE, birth_date DATE, phone TEXT, address TEXT, bank_card_masked TEXT);
+CREATE TABLE loan_applications (id BIGSERIAL PRIMARY KEY, customer_id BIGINT NOT NULL REFERENCES customer_profiles(id), amount NUMERIC(14,2), term_days INT, requested_apr NUMERIC(5,2), status TEXT, created_at TIMESTAMP, decision_at TIMESTAMP, referral_code_used TEXT);
+CREATE TABLE risk_assessments (id BIGSERIAL PRIMARY KEY, application_id BIGINT UNIQUE REFERENCES loan_applications(id), score INT, existing_active_loan BOOLEAN, blacklist_hit BOOLEAN, decision_reason TEXT, approved_apr NUMERIC(5,2), approved_amount NUMERIC(14,2), approved_term_days INT);
+CREATE TABLE loans (id BIGSERIAL PRIMARY KEY, application_id BIGINT UNIQUE REFERENCES loan_applications(id), customer_id BIGINT REFERENCES customer_profiles(id), status TEXT, principal NUMERIC(14,2), apr NUMERIC(5,2), start_date DATE, end_date DATE, outstanding NUMERIC(14,2));
+CREATE TABLE repayment_schedule (id BIGSERIAL PRIMARY KEY, loan_id BIGINT REFERENCES loans(id), installment_no INT, due_date DATE, amount_due NUMERIC(14,2), amount_paid NUMERIC(14,2), closed BOOLEAN DEFAULT FALSE);
+CREATE TABLE payments (id BIGSERIAL PRIMARY KEY, loan_id BIGINT REFERENCES loans(id), received_at TIMESTAMP, amount NUMERIC(14,2), status TEXT, provider_ref TEXT);
+CREATE TABLE loyalty_accounts (id BIGINT PRIMARY KEY REFERENCES customer_profiles(id), points BIGINT DEFAULT 0);
+CREATE TABLE loyalty_events (id BIGSERIAL PRIMARY KEY, account_id BIGINT REFERENCES loyalty_accounts(id), type TEXT, delta BIGINT, metadata TEXT, created_at TIMESTAMP);
+CREATE TABLE referral_codes (id BIGSERIAL PRIMARY KEY, owner_id BIGINT UNIQUE REFERENCES customer_profiles(id), code TEXT UNIQUE NOT NULL);
+CREATE TABLE referrals (id BIGSERIAL PRIMARY KEY, referrer_id BIGINT REFERENCES customer_profiles(id), referee_id BIGINT REFERENCES customer_profiles(id), created_at TIMESTAMP, rewarded BOOLEAN DEFAULT FALSE);
+CREATE TABLE blacklist (id BIGSERIAL PRIMARY KEY, national_id TEXT, phone TEXT, reason TEXT);
+CREATE UNIQUE INDEX uq_one_active_loan_per_customer ON loans(customer_id) WHERE status = 'ACTIVE';ō
