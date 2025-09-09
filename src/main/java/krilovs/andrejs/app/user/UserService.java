@@ -3,6 +3,7 @@ package krilovs.andrejs.app.user;
 import java.util.List;
 import krilovs.andrejs.app.config.PasswordService;
 import krilovs.andrejs.app.exception.ApplicationException;
+import krilovs.andrejs.app.user.active.ActiveUserMapper;
 import krilovs.andrejs.app.user.active.ActiveUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class UserService {
   private final UserMapper userMapper;
   private final UserRepository userRepository;
   private final PasswordService passwordService;
+  private final ActiveUserMapper activeUserMapper;
   private final ActiveUserRepository activeUserRepository;
 
   public List<UserDto> getActiveUsers() {
@@ -23,7 +25,7 @@ public class UserService {
 
     var users = activeUserRepository.findAll()
       .stream()
-      .map(userMapper::toDto)
+      .map(activeUserMapper::toUserDto)
       .toList();
 
     if (users.isEmpty()) {

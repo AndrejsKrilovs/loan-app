@@ -13,7 +13,7 @@ class UserMapperTest {
 
   @Test
   void shouldMapAllFieldsWhenDtoIsValid() {
-    UserDto dto = UserDto.builder()
+    var dto = UserDto.builder()
       .id(1L)
       .email("test@example.com")
       .password("securePass123!")
@@ -32,7 +32,7 @@ class UserMapperTest {
 
   @Test
   void shouldSetDefaultsWhenEnabledAndRoleAreNull() {
-    UserDto dto = UserDto.builder()
+    var dto = UserDto.builder()
       .id(2L)
       .email("default@example.com")
       .password("password123$")
@@ -54,7 +54,7 @@ class UserMapperTest {
 
   @Test
   void shouldMapAllFieldsWhenEntityIsValid() {
-    UserEntity entity = new UserEntity();
+    var entity = new UserEntity();
     entity.setId(3L);
     entity.setEmail("entity@example.com");
     entity.setPassword("entityPass");

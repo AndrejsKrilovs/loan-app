@@ -1,9 +1,12 @@
 package krilovs.andrejs.app.user;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import krilovs.andrejs.app.config.PasswordService;
 import krilovs.andrejs.app.exception.ApplicationException;
+import krilovs.andrejs.app.user.active.ActiveUserEntity;
+import krilovs.andrejs.app.user.active.ActiveUserMapper;
 import krilovs.andrejs.app.user.active.ActiveUserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,9 @@ class UserServiceTest {
   private PasswordService passwordService;
 
   @Mock
+  private ActiveUserMapper activeUserMapper;
+
+  @Mock
   private ActiveUserRepository activeUserRepository;
 
   @InjectMocks
@@ -34,6 +40,7 @@ class UserServiceTest {
 
   private UserDto userDto;
   private UserEntity userEntity;
+  private ActiveUserEntity activeUserEntity;
 
   @BeforeEach
   void setUp() {
@@ -43,6 +50,7 @@ class UserServiceTest {
       .password("Password1!")
       .role(UserRole.CUSTOMER)
       .enabled(Boolean.TRUE)
+      .loggedIn(LocalDateTime.now())
       .build();
 
     userEntity = new UserEntity();
@@ -51,18 +59,22 @@ class UserServiceTest {
     userEntity.setPassword("hashed");
     userEntity.setRole(UserRole.CUSTOMER);
     userEntity.setEnabled(Boolean.TRUE);
+
+    activeUserEntity = new ActiveUserEntity();
+    activeUserEntity.setUser(userEntity);
+    activeUserEntity.setLoggedIn(LocalDateTime.now());
   }
 
   @Test
   void shouldReturnActiveUsers() {
-    Mockito.when(activeUserRepository.findAll()).thenReturn(List.of(userEntity));
-    Mockito.when(userMapper.toDto(userEntity)).thenReturn(userDto);
+    Mockito.when(activeUserRepository.findAll()).thenReturn(List.of(activeUserEntity));
+    Mockito.when(activeUserMapper.toUserDto(activeUserEntity)).thenReturn(userDto);
 
     var result = userService.getActiveUsers();
     Assertions.assertNotNull(result);
     Assertions.assertFalse(result.isEmpty());
     Mockito.verify(activeUserRepository, Mockito.only()).findAll();
-    Mockito.verify(userMapper, Mockito.only()).toDto(userEntity);
+    Mockito.verify(activeUserMapper, Mockito.only()).toUserDto(activeUserEntity);
   }
 
   @Test

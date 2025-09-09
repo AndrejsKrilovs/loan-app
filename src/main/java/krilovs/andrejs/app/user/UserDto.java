@@ -1,5 +1,6 @@
 package krilovs.andrejs.app.user;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
@@ -40,4 +42,8 @@ public class UserDto {
   String password;
   UserRole role;
   Boolean enabled;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  LocalDateTime loggedIn;
 }

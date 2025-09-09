@@ -11,11 +11,10 @@ import org.springframework.stereotype.Repository;
 public class ActiveUserRepository {
   private final Map<Long, ActiveUserEntity> activeUsers = new ConcurrentHashMap<>();
 
-  public List<UserEntity> findAll() {
+  public List<ActiveUserEntity> findAll() {
     return activeUsers
       .values()
       .stream()
-      .map(ActiveUserEntity::getUser)
       .toList();
   }
 
