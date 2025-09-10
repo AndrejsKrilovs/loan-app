@@ -24,10 +24,9 @@ public class UserController {
 
   @PostMapping("/register")
   public ResponseEntity<UserDto> registerUser(@Valid @RequestBody UserDto userToRegister) {
-    var rs = ResponseEntity
+    return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(userService.registerNewUser(userToRegister));
-    return rs;
   }
 
   @PostMapping("/login")

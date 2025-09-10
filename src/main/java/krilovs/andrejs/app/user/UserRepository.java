@@ -24,4 +24,8 @@ public class UserRepository {
       .filter(usr -> usr.getEmail().equalsIgnoreCase(email))
       .findAny();
   }
+
+  public Optional<UserEntity> findById(Long id) {
+    return Optional.ofNullable(users.get(id));
+  }
 }

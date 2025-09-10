@@ -1,0 +1,52 @@
+package krilovs.andrejs.app.profile;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDate;
+import krilovs.andrejs.app.utility.ValidPersonalCode;
+import lombok.Builder;
+import lombok.ToString;
+import lombok.Value;
+
+@Value
+@Builder
+@ToString
+public class ProfileDto {
+  @NotNull(message = "User id should be provided")
+  @PositiveOrZero(message = "User identifier should be positive number")
+  Long userId;
+
+  @NotNull(message = "Name should be defined")
+  @NotBlank(message = "Name should not be empty")
+  @Pattern(regexp = "^[A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?$", message = "Name must be correct")
+  String firstName;
+
+  @NotNull(message = "Surname should be defined")
+  @NotBlank(message = "Surname should not be empty")
+  @Pattern(
+    regexp = "^[A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?(?: [A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?)?$",
+    message = "Surname must be correct"
+  )
+  String lastName;
+
+  @NotNull(message = "Personal code should be defined")
+  @NotBlank(message = "Personal code should not be empty")
+  @ValidPersonalCode
+  String personalCode;
+
+  @NotNull(message = "Birthdate should be defined")
+  LocalDate birthDate;
+
+  @NotNull(message = "Phone number should be defined")
+  @NotBlank(message = "Phone number should not be empty")
+  @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Phone number should be valid")
+  String phone;
+
+  @NotNull(message = "Card number should be defined")
+  @NotBlank(message = "Card number should not be empty")
+  @Pattern(regexp = "^(?:\\d{4}[- ]?){3}\\d{4}$", message = "Card number should be valid")
+  String bankCardNumber;
+  String address;
+}
