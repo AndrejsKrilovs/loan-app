@@ -8,10 +8,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
+
+import java.time.LocalDateTime;
 
 @Value
 @Builder
@@ -28,7 +29,10 @@ public class UserDto {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @NotNull(message = "User password should be defined")
   @NotBlank(message = "User password should not be empty")
-  @Size(min = 8, message = "User password should be at least 8 characters")
+  @Size(
+    min = 8,
+    message = "User password should be at least 8 characters"
+  )
   @Pattern(
     regexp = "^(?=.*[A-Za-zА-Яа-яЁё])(?=.*\\d)(?=.*[@#$%^&+=!()\\-_*]).{8,}$",
     message = """
@@ -44,6 +48,9 @@ public class UserDto {
   Boolean enabled;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+  @JsonFormat(
+    shape = JsonFormat.Shape.STRING,
+    pattern = "yyyy-MM-dd'T'HH:mm:ss"
+  )
   LocalDateTime loggedIn;
 }

@@ -1,8 +1,5 @@
 package krilovs.andrejs.app.user;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import krilovs.andrejs.app.config.PasswordService;
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.user.active.ActiveUserEntity;
@@ -14,9 +11,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -67,85 +76,149 @@ class UserServiceTest {
 
   @Test
   void shouldReturnActiveUsers() {
-    Mockito.when(activeUserRepository.findAll()).thenReturn(List.of(activeUserEntity));
-    Mockito.when(activeUserMapper.toUserDto(activeUserEntity)).thenReturn(userDto);
+    when(activeUserRepository.findAll()).thenReturn(List.of(activeUserEntity));
+    when(activeUserMapper.toUserDto(activeUserEntity)).thenReturn(userDto);
 
     var result = userService.getActiveUsers();
     Assertions.assertNotNull(result);
     Assertions.assertFalse(result.isEmpty());
-    Mockito.verify(activeUserRepository, Mockito.only()).findAll();
-    Mockito.verify(activeUserMapper, Mockito.only()).toUserDto(activeUserEntity);
+    verify(
+      activeUserRepository,
+      only()
+    ).findAll();
+    verify(
+      activeUserMapper,
+      only()
+    ).toUserDto(activeUserEntity);
   }
 
   @Test
   void shouldThrowExceptionWhenNoActiveUsers() {
-    Mockito.when(activeUserRepository.findAll()).thenReturn(List.of());
+    when(activeUserRepository.findAll()).thenReturn(List.of());
 
-    var exception = Assertions.assertThrows(ApplicationException.class, () -> userService.getActiveUsers());
+    var exception = assertThrows(
+      ApplicationException.class,
+      () -> userService.getActiveUsers()
+    );
     Assertions.assertNotNull(exception);
-    Assertions.assertEquals(HttpStatus.OK, exception.getStatus());
-    Assertions.assertTrue(exception.getMessage().contains("No active users"));
+    assertEquals(
+      HttpStatus.OK,
+      exception.getStatus()
+    );
+    assertTrue(exception.getMessage()
+      .contains("No active users"));
   }
 
   @Test
   void shouldRegisterNewUser() {
-    Mockito.when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
-    Mockito.when(userMapper.toEntity(userDto)).thenReturn(userEntity);
-    Mockito.when(passwordService.hashPassword(userDto.getPassword())).thenReturn("hashedPassword");
-    Mockito.when(userRepository.save(userEntity)).thenReturn(userEntity);
-    Mockito.when(userMapper.toDto(userEntity)).thenReturn(userDto);
+    when(userMapper.toEntity(userDto)).thenReturn(userEntity);
+    when(passwordService.hashPassword(userDto.getPassword())).thenReturn("hashedPassword");
+    when(userRepository.save(userEntity)).thenReturn(userEntity);
+    when(userMapper.toDto(userEntity)).thenReturn(userDto);
 
     var result = userService.registerNewUser(userDto);
     Assertions.assertNotNull(result);
-    Assertions.assertEquals(userDto, result);
-    Mockito.verify(passwordService, Mockito.only()).hashPassword(userDto.getPassword());
+    assertEquals(
+      userDto,
+      result
+    );
+    verify(
+      passwordService,
+      only()
+    ).hashPassword(userDto.getPassword());
   }
 
   @Test
   void shouldThrowExceptionWhenTryToRegisterDuplicateUser() {
-    Mockito.when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
+    when(userMapper.toEntity(userDto)).thenReturn(userEntity);
+    when(userRepository.save(userEntity)).thenThrow(DataIntegrityViolationException.class);
 
-    var exception = Assertions.assertThrows(ApplicationException.class, () -> userService.registerNewUser(userDto));
-    Assertions.assertNotNull(exception);
-    Assertions.assertEquals(HttpStatus.CONFLICT, exception.getStatus());
-    Assertions.assertTrue(exception.getMessage().contains("already exists"));
-    Mockito.verify(userRepository, Mockito.never()).save(userEntity);
-    Mockito.verify(passwordService, Mockito.never()).hashPassword(userDto.getPassword());
+    ApplicationException ex = assertThrows(
+      ApplicationException.class,
+      () -> userService.registerNewUser(userDto)
+    );
+
+    assertEquals(
+      HttpStatus.CONFLICT,
+      ex.getStatus()
+    );
+
+    assertTrue(
+      ex.getMessage()
+        .contains("User with email 'test@example.com' already exists"),
+      "Exception message should mention duplicate email"
+    );
+
+    verify(
+      userRepository,
+      only()
+    ).save(userEntity);
+    verifyNoMoreInteractions(userRepository);
+
   }
 
   @Test
   void shouldLoginUser() {
-    Mockito.when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
-    Mockito.when(passwordService.verifyPassword(userDto.getPassword(), userEntity.getPassword())).thenReturn(true);
-    Mockito.when(userMapper.toDto(userEntity)).thenReturn(userDto);
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
+    when(passwordService.verifyPassword(
+      userDto.getPassword(),
+      userEntity.getPassword()
+    )).thenReturn(true);
+    when(userMapper.toDto(userEntity)).thenReturn(userDto);
 
     var result = userService.login(userDto);
-    Assertions.assertEquals(userDto, result);
-    Mockito.verify(activeUserRepository, Mockito.only()).add(userEntity);
+    assertEquals(
+      userDto,
+      result
+    );
+    verify(
+      activeUserRepository,
+      only()
+    ).add(userEntity);
   }
 
   @Test
   void shouldThrowExceptionWhenUserNotFound() {
-    Mockito.when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
 
-    var ex = Assertions.assertThrows(ApplicationException.class, () -> userService.login(userDto));
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
-    Assertions.assertTrue(ex.getMessage().contains("Invalid email"));
+    var ex = assertThrows(
+      ApplicationException.class,
+      () -> userService.login(userDto)
+    );
+    assertEquals(
+      HttpStatus.NOT_FOUND,
+      ex.getStatus()
+    );
+    assertTrue(ex.getMessage()
+      .contains("Invalid email"));
   }
 
   @Test
   void shouldThrowExceptionWhenPasswordIncorrect() {
-    Mockito.when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
-    Mockito.when(passwordService.verifyPassword(userDto.getPassword(), userEntity.getPassword())).thenReturn(Boolean.FALSE);
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
+    when(passwordService.verifyPassword(
+      userDto.getPassword(),
+      userEntity.getPassword()
+    )).thenReturn(Boolean.FALSE);
 
-    var exception = Assertions.assertThrows(ApplicationException.class, () -> userService.login(userDto));
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
-    Assertions.assertTrue(exception.getMessage().contains("Invalid password"));
+    var exception = assertThrows(
+      ApplicationException.class,
+      () -> userService.login(userDto)
+    );
+    assertEquals(
+      HttpStatus.NOT_FOUND,
+      exception.getStatus()
+    );
+    assertTrue(exception.getMessage()
+      .contains("Invalid password"));
   }
 
   @Test
   void shouldRemoveUserFromActiveUsers() {
     userService.logout(1L);
-    Mockito.verify(activeUserRepository, Mockito.only()).remove(1L);
+    verify(
+      activeUserRepository,
+      only()
+    ).remove(1L);
   }
 }

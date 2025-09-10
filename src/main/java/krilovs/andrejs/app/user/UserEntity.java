@@ -59,8 +59,7 @@ public class UserEntity {
 
   @ColumnDefault("true")
   @Column(
-    name = "is_user_enabled",
-    nullable = false
+    name = "is_user_enabled"
   )
   private Boolean enabled;
 }
