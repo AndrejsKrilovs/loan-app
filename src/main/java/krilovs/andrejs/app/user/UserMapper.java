@@ -5,11 +5,23 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-  @Mapping(target = "enabled", defaultExpression = "java(Boolean.TRUE)")
-  @Mapping(target = "role", defaultExpression = "java(krilovs.andrejs.app.user.UserRole.CUSTOMER)")
+  @Mapping(
+    target = "enabled",
+    defaultExpression = "java(Boolean.TRUE)"
+  )
+  @Mapping(
+    target = "role",
+    defaultExpression = "java(krilovs.andrejs.app.user.UserRole.CUSTOMER)"
+  )
   UserEntity toEntity(UserDto dto);
 
-  @Mapping(target = "password", ignore = true)
-  @Mapping(target = "loggedIn", ignore = true)
+  @Mapping(
+    target = "password",
+    ignore = true
+  )
+  @Mapping(
+    target = "loggedTime",
+    ignore = true
+  )
   UserDto toDto(UserEntity entity);
 }

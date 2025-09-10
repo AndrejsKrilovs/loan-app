@@ -105,8 +105,17 @@ public class UserService {
       "User logged in successfully with email={}",
       user.getEmail()
     );
-    activeUserRepository.add(user);
-    return userMapper.toDto(user);
+
+    try {
+      activeUserRepository.add(user.getId());
+      return userMapper.toDto(user);
+    }
+    catch (DataIntegrityViolationException violationException) {
+      throw new ApplicationException(
+        HttpStatus.CONFLICT,
+        "User with email %s already logged in".formatted(user.getEmail())
+      );
+    }
   }
 
   public void logout(Long userId) {
@@ -114,7 +123,7 @@ public class UserService {
       "Attempting to logout user with id={}",
       userId
     );
-    activeUserRepository.remove(userId);
+    activeUserRepository.deleteById(userId);
     log.info(
       "User with id {} logged out",
       userId

@@ -52,5 +52,5 @@ public class UserDto {
     shape = JsonFormat.Shape.STRING,
     pattern = "yyyy-MM-dd'T'HH:mm:ss"
   )
-  LocalDateTime loggedIn;
+  LocalDateTime loggedTime;
 }

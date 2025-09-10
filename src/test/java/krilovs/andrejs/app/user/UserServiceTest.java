@@ -5,7 +5,6 @@ import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.user.active.ActiveUserEntity;
 import krilovs.andrejs.app.user.active.ActiveUserMapper;
 import krilovs.andrejs.app.user.active.ActiveUserRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +19,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -59,7 +61,7 @@ class UserServiceTest {
       .password("Password1!")
       .role(UserRole.CUSTOMER)
       .enabled(Boolean.TRUE)
-      .loggedIn(LocalDateTime.now())
+      .loggedTime(LocalDateTime.now())
       .build();
 
     userEntity = new UserEntity();
@@ -71,7 +73,7 @@ class UserServiceTest {
 
     activeUserEntity = new ActiveUserEntity();
     activeUserEntity.setUser(userEntity);
-    activeUserEntity.setLoggedIn(LocalDateTime.now());
+    activeUserEntity.setLoggedTime(LocalDateTime.now());
   }
 
   @Test
@@ -80,12 +82,13 @@ class UserServiceTest {
     when(activeUserMapper.toUserDto(activeUserEntity)).thenReturn(userDto);
 
     var result = userService.getActiveUsers();
-    Assertions.assertNotNull(result);
-    Assertions.assertFalse(result.isEmpty());
+    assertNotNull(result);
+    assertFalse(result.isEmpty());
     verify(
       activeUserRepository,
       only()
     ).findAll();
+
     verify(
       activeUserMapper,
       only()
@@ -95,16 +98,17 @@ class UserServiceTest {
   @Test
   void shouldThrowExceptionWhenNoActiveUsers() {
     when(activeUserRepository.findAll()).thenReturn(List.of());
-
     var exception = assertThrows(
       ApplicationException.class,
       () -> userService.getActiveUsers()
     );
-    Assertions.assertNotNull(exception);
+    assertNotNull(exception);
     assertEquals(
       HttpStatus.OK,
       exception.getStatus()
     );
+
+
     assertTrue(exception.getMessage()
       .contains("No active users"));
   }
@@ -117,7 +121,7 @@ class UserServiceTest {
     when(userMapper.toDto(userEntity)).thenReturn(userDto);
 
     var result = userService.registerNewUser(userDto);
-    Assertions.assertNotNull(result);
+    assertNotNull(result);
     assertEquals(
       userDto,
       result
@@ -137,24 +141,45 @@ class UserServiceTest {
       ApplicationException.class,
       () -> userService.registerNewUser(userDto)
     );
-
     assertEquals(
       HttpStatus.CONFLICT,
       ex.getStatus()
     );
-
     assertTrue(
       ex.getMessage()
-        .contains("User with email 'test@example.com' already exists"),
-      "Exception message should mention duplicate email"
+        .contains("User with email 'test@example.com' already exists")
     );
-
     verify(
       userRepository,
       only()
     ).save(userEntity);
-    verifyNoMoreInteractions(userRepository);
 
+    verifyNoMoreInteractions(userRepository);
+  }
+
+  @Test
+  void shouldThrowExceptionWhenAlreadyLoggedIn() {
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(userEntity));
+    when(passwordService.verifyPassword(
+      userDto.getPassword(),
+      userEntity.getPassword()
+    )).thenReturn(true);
+
+    doThrow(DataIntegrityViolationException.class).when(activeUserRepository)
+      .add(1L);
+
+    ApplicationException ex = assertThrows(
+      ApplicationException.class,
+      () -> userService.login(userDto)
+    );
+    assertEquals(
+      HttpStatus.CONFLICT,
+      ex.getStatus()
+    );
+    assertTrue(
+      ex.getMessage()
+        .contains("already logged in")
+    );
   }
 
   @Test
@@ -174,7 +199,7 @@ class UserServiceTest {
     verify(
       activeUserRepository,
       only()
-    ).add(userEntity);
+    ).add(1L);
   }
 
   @Test
@@ -219,6 +244,6 @@ class UserServiceTest {
     verify(
       activeUserRepository,
       only()
-    ).remove(1L);
+    ).deleteById(1L);
   }
 }

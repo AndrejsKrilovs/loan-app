@@ -7,8 +7,28 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pwd
       POSTGRES_DB: loan_app_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d loan_app_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-volumes:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  pgAdmin:
+    image: dpage/pgadmin4:9.4.0
+    container_name: pg_adm_container
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@some.email
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "8888:80"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   db-volumes:

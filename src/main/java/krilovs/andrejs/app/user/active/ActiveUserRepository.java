@@ -1,31 +1,22 @@
 package krilovs.andrejs.app.user.active;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import krilovs.andrejs.app.user.UserEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public class ActiveUserRepository {
-  private final Map<Long, ActiveUserEntity> activeUsers = new ConcurrentHashMap<>();
-
-  public List<ActiveUserEntity> findAll() {
-    return activeUsers
-      .values()
-      .stream()
-      .toList();
-  }
-
-  public void add(UserEntity newUser) {
-    ActiveUserEntity activeUser = new ActiveUserEntity();
-    activeUser.setUser(newUser);
-    activeUser.setLoggedIn(LocalDateTime.now());
-    activeUsers.put(newUser.getId(), activeUser);
-  }
-
-  public void remove(Long id) {
-    activeUsers.remove(id);
-  }
+public interface ActiveUserRepository extends JpaRepository<ActiveUserEntity, Long> {
+  @Modifying
+  @Transactional
+  @Query(
+    value = """
+      INSERT INTO active_user_table (active_user_id, active_user_logged_time)
+      VALUES (:userId, NOW())
+      """,
+    nativeQuery = true
+  )
+  void add(@Param("userId") Long userId);
 }
