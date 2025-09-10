@@ -1,8 +1,8 @@
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'org.springframework.boot' version '3.5.5'
-    id 'io.spring.dependency-management' version '1.1.7'
+  id 'java'
+  id 'jacoco'
+  id 'org.springframework.boot' version '3.5.5'
+  id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'krilovs.andrejs.app'
@@ -10,96 +10,97 @@ version = '0.0.1-SNAPSHOT'
 description = 'Demo project for Spring Boot'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
 }
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation 'org.mindrot:jbcrypt:0.4'
-    implementation 'org.postgresql:postgresql:42.7.7'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation 'org.mindrot:jbcrypt:0.4'
+  implementation 'org.postgresql:postgresql:42.7.7'
+  implementation 'org.liquibase:liquibase-core:4.33.0'
+  developmentOnly 'org.springframework.boot:spring-boot-devtools'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+  compileOnly 'org.projectlombok:lombok'
+  annotationProcessor 'org.projectlombok:lombok'
 
-    compileOnly 'org.mapstruct:mapstruct:1.6.3'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+  compileOnly 'org.mapstruct:mapstruct:1.6.3'
+  annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 }
 
 compileJava {
-    options.encoding = 'UTF-8'
-    options.compilerArgs << '-parameters'
+  options.encoding = 'UTF-8'
+  options.compilerArgs << '-parameters'
 }
 
 compileTestJava {
-    options.encoding = 'UTF-8'
+  options.encoding = 'UTF-8'
 }
 
 test {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
+  useJUnitPlatform()
+  finalizedBy jacocoTestReport
 }
 
 jacoco {
-    toolVersion = "0.8.10"
+  toolVersion = "0.8.10"
 }
 
 jacocoTestReport {
-    dependsOn test
+  dependsOn test
 
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ["krilovs/andrejs/app/Main.class"])
-        }))
-    }
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: ["krilovs/andrejs/app/Main.class"])
+    }))
+  }
 
-    reports {
-        xml.required = true
-        html.required = true
-        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
-    }
+  reports {
+    xml.required = true
+    html.required = true
+    html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+  }
 }
 
 jacocoTestCoverageVerification {
-    dependsOn jacocoTestReport
+  dependsOn jacocoTestReport
 
-    violationRules {
-        rule {
-            enabled = true
-            element = 'BUNDLE'
+  violationRules {
+    rule {
+      enabled = true
+      element = 'BUNDLE'
 
-            limit {
-                counter = 'INSTRUCTION'
-                value = 'COVEREDRATIO'
-                minimum = 0.8
-            }
+      limit {
+        counter = 'INSTRUCTION'
+        value = 'COVEREDRATIO'
+        minimum = 0.8
+      }
 
-            limit {
-                counter = 'BRANCH'
-                value = 'COVEREDRATIO'
-                minimum = 0.8
-            }
-        }
+      limit {
+        counter = 'BRANCH'
+        value = 'COVEREDRATIO'
+        minimum = 0.8
+      }
     }
+  }
 }
 
 tasks.named("check") {
-    dependsOn jacocoTestCoverageVerification
+  dependsOn jacocoTestCoverageVerification
 }
