@@ -4,7 +4,6 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -28,10 +27,11 @@ public class PersonalCodeValidator implements ConstraintValidator<ValidPersonalC
     var year = Integer.parseInt(matcher.group(3));
 
     try {
-      LocalDate.parse("%s-%s-%s".formatted(year, month, day), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-      return Boolean.TRUE;
+      LocalDate.of(year, month, day);
     } catch (DateTimeException e) {
       return Boolean.FALSE;
     }
+
+    return Boolean.TRUE;
   }
 }
