@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:17.4
+    container_name: pg_container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: loan_app_db
+    ports:
+      - "5432:5432"
+
+volumes:
+  db-volumes:
