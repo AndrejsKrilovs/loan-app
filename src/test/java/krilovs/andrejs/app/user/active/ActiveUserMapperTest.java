@@ -2,13 +2,16 @@ package krilovs.andrejs.app.user.active;
 
 import krilovs.andrejs.app.user.UserEntity;
 import krilovs.andrejs.app.user.UserRole;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(MockitoExtension.class)
 class ActiveUserMapperTest {
@@ -34,25 +37,25 @@ class ActiveUserMapperTest {
     ));
 
     var dto = activeUserMapper.toUserDto(activeUser);
-    Assertions.assertNotNull(dto);
-    Assertions.assertEquals(
+    assertNotNull(dto);
+    assertEquals(
       dto.getId(),
       entity.getId()
     );
-    Assertions.assertEquals(
+    assertEquals(
       dto.getEmail(),
       entity.getEmail()
     );
-    Assertions.assertEquals(
+    assertEquals(
       dto.getRole(),
       entity.getRole()
     );
-    Assertions.assertEquals(
+    assertEquals(
       dto.getEnabled(),
       entity.getEnabled()
     );
-    Assertions.assertNotNull(dto.getLoggedTime());
-    Assertions.assertEquals(
+    assertNotNull(dto.getLoggedTime());
+    assertEquals(
       LocalDateTime.of(
         2025,
         9,
@@ -66,7 +69,7 @@ class ActiveUserMapperTest {
 
   @Test
   void shouldReturnNullWhenEntityIsNull() {
-    Assertions.assertNull(activeUserMapper.toUserDto(null));
+    assertNull(activeUserMapper.toUserDto(null));
   }
 
   @Test
@@ -82,13 +85,13 @@ class ActiveUserMapperTest {
     ));
 
     var dto = activeUserMapper.toUserDto(activeUser);
-    Assertions.assertNotNull(dto);
-    Assertions.assertNull(dto.getId());
-    Assertions.assertNull(dto.getEmail());
-    Assertions.assertNull(dto.getRole());
-    Assertions.assertNull(dto.getEnabled());
-    Assertions.assertNotNull(dto.getLoggedTime());
-    Assertions.assertEquals(
+    assertNotNull(dto);
+    assertNull(dto.getId());
+    assertNull(dto.getEmail());
+    assertNull(dto.getRole());
+    assertNull(dto.getEnabled());
+    assertNotNull(dto.getLoggedTime());
+    assertEquals(
       LocalDateTime.of(
         2025,
         9,
