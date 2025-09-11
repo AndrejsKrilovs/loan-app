@@ -101,13 +101,12 @@ public class UserService {
       );
     }
 
-    log.info(
-      "User logged in successfully with email={}",
-      user.getEmail()
-    );
-
     try {
       activeUserRepository.add(user.getId());
+      log.info(
+        "User logged in successfully with email={}",
+        user.getEmail()
+      );
       return userMapper.toDto(user);
     }
     catch (DataIntegrityViolationException violationException) {

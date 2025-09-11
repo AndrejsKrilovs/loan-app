@@ -5,9 +5,23 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
-  @Mapping(target = "user.id", source = "userId")
+  @Mapping(
+    target = "id",
+    ignore = true
+  )
+  @Mapping(
+    target = "user",
+    ignore = true
+  )
+  @Mapping(
+    target = "version",
+    ignore = true
+  )
   ProfileEntity toEntity(ProfileDto dto);
 
-  @Mapping(target = "userId", source = "user.id")
+  @Mapping(
+    source = "user.id",
+    target = "userId"
+  )
   ProfileDto toDto(ProfileEntity entity);
 }

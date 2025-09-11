@@ -2,47 +2,96 @@ package krilovs.andrejs.app.profile;
 
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.user.UserRepository;
+import krilovs.andrejs.app.utility.EntityUpdater;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
   private final ProfileMapper profileMapper;
+  private final EntityUpdater entityUpdater;
   private final UserRepository userRepository;
   private final ProfileRepository profileRepository;
 
+  @Transactional
   public ProfileDto saveProfile(ProfileDto profileToUpdate) {
     log.debug("Attempting to save user profile");
 
-    var user = userRepository.findById(profileToUpdate.getUserId())
+    var user = userRepository
+      .findById(profileToUpdate.getUserId())
       .orElseThrow(() -> {
-        log.warn("User with id={} not found", profileToUpdate.getUserId());
-        return new ApplicationException(HttpStatus.NOT_FOUND, "User not found");
+        log.warn(
+          "User with id={} not found",
+          profileToUpdate.getUserId()
+        );
+        return new ApplicationException(
+          HttpStatus.NOT_FOUND,
+          "User not found"
+        );
       });
 
     var entity = profileMapper.toEntity(profileToUpdate);
     entity.setUser(user);
-    log.debug("Attempting to save user profile {}", entity);
 
-    profileRepository.save(entity);
-    log.info("Users profile {} updated successfully", entity);
-    return profileMapper.toDto(entity);
+    log.debug(
+      "Attempting to save user profile {}",
+      entity
+    );
+
+    var savedEntity = profileRepository
+      .findById(entity.getUser().getId())
+      .map(existing -> {
+        entityUpdater.updateFields(
+          entity,
+          existing,
+          ProfileEntity.class
+        );
+
+        log.info(
+          "Users profile {} updated successfully",
+          existing
+        );
+        return profileRepository.save(existing);
+      })
+      .orElseGet(() -> {
+        log.info(
+          "Users profile {} saved successfully",
+          entity
+        );
+        return profileRepository.save(entity);
+      });
+
+    return profileMapper.toDto(savedEntity);
   }
 
   public ProfileDto selectProfile(Long userId) {
-    log.debug("Attempting to select profile for user={}", userId);
+    log.debug(
+      "Attempting to select profile for user={}",
+      userId
+    );
 
-    var userProfile = profileRepository.findByUserId(userId)
+    var userProfile = profileRepository
+      .findById(userId)
       .orElseThrow(() -> {
-        log.warn("Profile not found for user with id={}", userId);
-        return new ApplicationException(HttpStatus.NOT_FOUND, "Profile not found for current user");
+        log.warn(
+          "Profile not found for user with id={}",
+          userId
+        );
+        return new ApplicationException(
+          HttpStatus.NOT_FOUND,
+          "Profile not found for current user"
+        );
       });
 
-    log.info("Found user profile {}", userProfile);
+    log.info(
+      "Found user profile {}",
+      userProfile
+    );
     return profileMapper.toDto(userProfile);
   }
 }
