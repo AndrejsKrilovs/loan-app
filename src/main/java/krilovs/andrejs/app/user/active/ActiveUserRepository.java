@@ -17,8 +17,8 @@ public interface ActiveUserRepository extends JpaRepository<ActiveUserEntity, Lo
   @Transactional
   @Query(
     value = """
-      INSERT INTO active_user_table (active_user_id, active_user_logged_time)
-      VALUES (:userId, NOW())
+      INSERT INTO active_user_table (active_user_id)
+      VALUES (:userId)
       """,
     nativeQuery = true
   )
