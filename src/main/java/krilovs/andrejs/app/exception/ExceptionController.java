@@ -1,7 +1,5 @@
 package krilovs.andrejs.app.exception;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +19,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExceptionController {
   @ExceptionHandler(ApplicationException.class)
-  public ResponseEntity<ExceptionResponse> handleApplicationException(ApplicationException exception,
-                                                                      HttpServletRequest request) {
+  public ResponseEntity<ExceptionResponse> handleApplicationException(
+    ApplicationException exception, HttpServletRequest request
+  ) {
     var result = new ExceptionResponse(
       exception.getStatus(),
       LocalDateTime.now(),
@@ -35,8 +34,9 @@ public class ExceptionController {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ExceptionResponse> handleValidationException(MethodArgumentNotValidException exception,
-                                                                     HttpServletRequest request) throws JsonProcessingException {
+  public ResponseEntity<ExceptionResponse> handleValidationException(
+    MethodArgumentNotValidException exception, HttpServletRequest request
+  ) {
     var errors = exception
       .getBindingResult()
       .getAllErrors()
@@ -50,22 +50,12 @@ public class ExceptionController {
       ));
 
     var result = new ExceptionResponse(
-      HttpStatus.valueOf(exception.getBody().getStatus()),
+      HttpStatus.valueOf(exception.getBody()
+        .getStatus()),
       LocalDateTime.now(),
       request.getRequestURI(),
       errors
     );
-
-    var errorsJson = new ObjectMapper()
-      .writerWithDefaultPrettyPrinter()
-      .writeValueAsString(errors);
-
-    log.error(
-      "Validation failed at {}:\n{}",
-      request.getRequestURI(),
-      errorsJson
-    );
-
     return ResponseEntity
       .status(result.status())
       .body(result);

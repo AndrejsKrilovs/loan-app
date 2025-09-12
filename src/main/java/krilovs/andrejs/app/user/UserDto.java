@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @ToString(exclude = {"password"})
 public class UserDto {
-  @Null(message = "User identifier should be null")
+  @Null(message = "User identifier should be null. It will de mapped automatically")
   Long id;
 
   @NotNull(message = "User email should be defined")
