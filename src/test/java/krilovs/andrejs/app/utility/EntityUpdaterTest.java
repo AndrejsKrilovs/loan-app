@@ -1,8 +1,13 @@
 package krilovs.andrejs.app.utility;
 
-import java.time.LocalDate;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import krilovs.andrejs.app.exception.ApplicationException;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EntityUpdaterTest {
   static class TestEntity {
@@ -56,10 +61,9 @@ class EntityUpdaterTest {
   @Test
   void shouldDoNothingIfSourceIsNull() {
     var target = new TestEntity("X", "Y", LocalDate.of(2010, 10, 10), "999");
+    var exception = assertThrows(ApplicationException.class, () -> EntityUpdater.updateFields(null, target));
 
-    EntityUpdater.updateFields(null, target);
-
-    assertEquals("X", target.firstName);
-    assertEquals("Y", target.lastName);
+    assertEquals(HttpStatus.NOT_MODIFIED, exception.getStatus());
+    assertEquals("Not update fields. Entities cannot be null", exception.getMessage());
   }
 }

@@ -1,7 +1,5 @@
 package krilovs.andrejs.app.profile;
 
-import java.time.LocalDate;
-import java.util.Optional;
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.user.UserEntity;
 import krilovs.andrejs.app.user.UserRepository;
@@ -15,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.time.LocalDate;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class ProfileServiceTest {
@@ -68,11 +69,11 @@ class ProfileServiceTest {
     Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
     Mockito.when(profileMapper.toEntity(dto)).thenReturn(profileEntity);
     Mockito.when(profileMapper.toDto(profileEntity)).thenReturn(dto);
+    Mockito.when(profileRepository.save(profileEntity)).thenReturn(profileEntity);
 
     var result = profileService.saveProfile(dto);
     Assertions.assertNotNull(result);
     Assertions.assertEquals(dto, result);
-    Mockito.verify(profileRepository, Mockito.only()).save(profileEntity);
   }
 
   @Test
@@ -86,7 +87,7 @@ class ProfileServiceTest {
 
   @Test
   void shouldSelectProfile() {
-    Mockito.when(profileRepository.findByUserId(1L)).thenReturn(Optional.of(profileEntity));
+    Mockito.when(profileRepository.findById(1L)).thenReturn(Optional.of(profileEntity));
     Mockito.when(profileMapper.toDto(profileEntity)).thenReturn(dto);
 
     var result = profileService.selectProfile(1L);
@@ -96,10 +97,44 @@ class ProfileServiceTest {
 
   @Test
   void shouldThrowExceptionWhenProfileNotFound() {
-    Mockito.when(profileRepository.findByUserId(1L)).thenReturn(Optional.empty());
+    Mockito.when(profileRepository.findById(1L)).thenReturn(Optional.empty());
 
     var ex = Assertions.assertThrows(ApplicationException.class, () -> profileService.selectProfile(1L));
     Assertions.assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
     Assertions.assertEquals("Profile not found for current user", ex.getMessage());
+  }
+
+  @Test
+  void shouldUpdateExistingProfile() {
+    var updatedDto = ProfileDto.builder()
+      .userId(1L)
+      .firstName("UpdatedName")
+      .lastName("Krilovs")
+      .personalCode("10092025-12345")
+      .birthDate(LocalDate.of(2025, 9, 10))
+      .phone("+37199999999")
+      .bankCardNumber("1234 5678 9012 3456")
+      .build();
+
+    var updatedEntity = new ProfileEntity();
+    updatedEntity.setUser(userEntity);
+    updatedEntity.setFirstName("UpdatedName");
+    updatedEntity.setLastName("Krilovs");
+    updatedEntity.setPersonalCode("10092025-12345");
+    updatedEntity.setBirthDate(LocalDate.of(2025, 9, 10));
+    updatedEntity.setPhone("+37199999999");
+    updatedEntity.setBankCardNumber("1234 5678 9012 3456");
+
+    Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
+    Mockito.when(profileMapper.toEntity(updatedDto)).thenReturn(updatedEntity);
+    Mockito.when(profileRepository.findById(1L)).thenReturn(Optional.of(profileEntity));
+    Mockito.when(profileRepository.save(profileEntity)).thenReturn(updatedEntity);
+    Mockito.when(profileMapper.toDto(updatedEntity)).thenReturn(updatedDto);
+
+    var result = profileService.saveProfile(updatedDto);
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals("UpdatedName", result.getFirstName());
+    Assertions.assertEquals("+37199999999", result.getPhone());
+    Assertions.assertEquals(updatedDto, result);
   }
 }

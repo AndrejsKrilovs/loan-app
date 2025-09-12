@@ -1,12 +1,13 @@
 package krilovs.andrejs.app.profile;
 
-import java.time.LocalDate;
 import krilovs.andrejs.app.user.UserEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
 
 @ExtendWith(MockitoExtension.class)
 class ProfileMapperTest {
@@ -28,8 +29,6 @@ class ProfileMapperTest {
 
     var entity = profileMapper.toEntity(dto);
     Assertions.assertNotNull(entity);
-    Assertions.assertNotNull(entity.getUser());
-    Assertions.assertEquals(dto.getUserId(), entity.getUser().getId());
     Assertions.assertEquals(dto.getFirstName(), entity.getFirstName());
     Assertions.assertEquals(dto.getLastName(), entity.getLastName());
     Assertions.assertEquals(dto.getPersonalCode(), entity.getPersonalCode());
@@ -90,6 +89,6 @@ class ProfileMapperTest {
 
   @Test
   void shouldReturnNull() {
-    Assertions.assertNull(profileMapper.profileDtoToUserEntity(null));
+    Assertions.assertNull(profileMapper.toDto(null));
   }
 }

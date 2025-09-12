@@ -2,6 +2,7 @@ package krilovs.andrejs.app.profile;
 
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.user.UserRepository;
+import krilovs.andrejs.app.utility.EntityUpdater;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,15 +29,27 @@ public class ProfileService {
     entity.setUser(user);
     log.debug("Attempting to save user profile {}", entity);
 
-    profileRepository.save(entity);
-    log.info("Users profile {} updated successfully", entity);
-    return profileMapper.toDto(entity);
+    var savedEntity = profileRepository
+      .findById(entity.getUser().getId())
+      .map(existing -> {
+        EntityUpdater.updateFields(entity, existing);
+        var updated = profileRepository.save(existing);
+        log.info("Users profile {} updated successfully", updated);
+        return updated;
+      })
+      .orElseGet(() -> {
+        var saved = profileRepository.save(entity);
+        log.info("Users profile {} saved successfully", saved);
+        return saved;
+      });
+
+    return profileMapper.toDto(savedEntity);
   }
 
   public ProfileDto selectProfile(Long userId) {
     log.debug("Attempting to select profile for user={}", userId);
 
-    var userProfile = profileRepository.findByUserId(userId)
+    var userProfile = profileRepository.findById(userId)
       .orElseThrow(() -> {
         log.warn("Profile not found for user with id={}", userId);
         return new ApplicationException(HttpStatus.NOT_FOUND, "Profile not found for current user");

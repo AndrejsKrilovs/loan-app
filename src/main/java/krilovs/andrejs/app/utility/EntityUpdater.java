@@ -1,9 +1,14 @@
 package krilovs.andrejs.app.utility;
 
+import krilovs.andrejs.app.exception.ApplicationException;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+
 import java.util.Arrays;
 import java.util.Objects;
-import lombok.experimental.UtilityClass;
 
+@Slf4j
 @UtilityClass
 public class EntityUpdater {
   /**
@@ -12,7 +17,11 @@ public class EntityUpdater {
    */
   public static <T> void updateFields(T source, T target) {
     if (Objects.isNull(source) || Objects.isNull(target)) {
-      return;
+      log.error("Not update fields. Entities cannot be null");
+      throw new ApplicationException(
+        HttpStatus.NOT_MODIFIED,
+        "Not update fields. Entities cannot be null"
+      );
     }
 
     Arrays.stream(source.getClass().getDeclaredFields())
@@ -27,11 +36,16 @@ public class EntityUpdater {
             if (!newStr.trim().equalsIgnoreCase(oldStr)) {
               field.set(target, newStr);
             }
-          } else if (!Objects.equals(newValue, oldValue) && newValue != null) {
+          }
+          else if (Objects.nonNull(newValue) && !newValue.equals(oldValue)) {
             field.set(target, newValue);
           }
-        } catch (IllegalAccessException e) {
-          throw new RuntimeException("Failed to update field: " + field.getName(), e);
+        }
+        catch (IllegalAccessException e) {
+          throw new ApplicationException(
+            HttpStatus.NOT_MODIFIED,
+            "Cannot make update. Failed to update field: %s".formatted(field.getName())
+          );
         }
       });
   }

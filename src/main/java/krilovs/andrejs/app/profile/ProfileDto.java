@@ -4,11 +4,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.time.LocalDate;
+import jakarta.validation.constraints.Size;
 import krilovs.andrejs.app.utility.ValidPersonalCode;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
+
+import java.time.LocalDate;
 
 @Value
 @Builder
@@ -20,11 +22,16 @@ public class ProfileDto {
 
   @NotNull(message = "Name should be defined")
   @NotBlank(message = "Name should not be empty")
-  @Pattern(regexp = "^[A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?$", message = "Name must be correct")
+  @Size(max = 30, message = "Name maximal length is 30 characters")
+  @Pattern(
+    regexp = "^[A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?$",
+    message = "Name must be correct"
+  )
   String firstName;
 
   @NotNull(message = "Surname should be defined")
   @NotBlank(message = "Surname should not be empty")
+  @Size(max = 30, message = "Surname maximal length is 30 characters")
   @Pattern(
     regexp = "^[A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?(?: [A-ZА-ЯЁ][a-zа-яё]+(?:-[A-ZА-ЯЁ][a-zа-яё]+)?)?$",
     message = "Surname must be correct"
