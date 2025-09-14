@@ -23,8 +23,7 @@ import org.hibernate.annotations.ColumnDefault;
   indexes = {
     @Index(
       name = "user_email_ind",
-      columnList = "user_email",
-      unique = true
+      columnList = "user_email"
     )
   }
 )

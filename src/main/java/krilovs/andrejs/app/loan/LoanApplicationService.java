@@ -4,14 +4,11 @@ import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.profile.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -21,45 +18,11 @@ public class LoanApplicationService {
   private final LoanApplicationMapper loanApplicationMapper;
   private final LoanApplicationRepository loanApplicationRepository;
 
-  private static Specification<LoanApplicationEntity> buildSpecification(
-    Map<String, String> params
-  ) {
-    return (root, query, cb) -> {
-      var predicate = cb.conjunction();
-
-      if (params.containsKey("status")) {
-        predicate = cb.and(
-          predicate,
-          cb.equal(root.get("status"), LoanApplicationStatus.valueOf(params.get("status")))
-        );
-      }
-      else if (params.containsKey("customerId")) {
-        predicate = cb.and(
-          predicate,
-          cb.equal(root.get("customer").get("id"), Long.valueOf(params.get("customerId")))
-        );
-        Objects.requireNonNull(query).orderBy(cb.desc(root.get("createdAt")));
-      }
-      else if (params.containsKey("createdFrom") && params.containsKey("createdTo")) {
-        var from = LocalDate.parse(params.get("createdFrom"));
-        var to = LocalDate.parse(params.get("createdTo"));
-        predicate = cb.and(predicate, cb.between(root.get("createdAt"), from, to));
-      }
-      else {
-        throw new ApplicationException(
-          HttpStatus.PRECONDITION_FAILED,
-          "Correct parameters should be set to filter loan applications"
-        );
-      }
-      return predicate;
-    };
-  }
-
   public List<LoanApplicationDto> getLoanApplications(Map<String, String> params) {
     log.debug("Attempting to filter loans with params {} from database", params);
 
     var loans = loanApplicationRepository
-      .findAll(buildSpecification(params))
+      .findAll(LoanApplicationSpecification.buildSelectSpecification(params))
       .stream()
       .map(loanApplicationMapper::toDto)
       .toList();
@@ -74,19 +37,58 @@ public class LoanApplicationService {
   }
 
   public LoanApplicationDto createLoanApplication(LoanApplicationDto loanApplication) {
-    var profile = profileRepository
-      .findById(loanApplication.getCustomerId())
+    var profile = profileRepository.findById(loanApplication.getCustomerId())
       .orElseThrow(() -> {
         log.warn("Profile with id={} not found", loanApplication.getCustomerId());
-        return new ApplicationException(HttpStatus.NOT_FOUND, "Profile not found");
+        return new ApplicationException(
+          HttpStatus.NOT_FOUND, "Profile not found"
+        );
       });
 
     var entity = loanApplicationMapper.toEntity(loanApplication);
     entity.setCustomer(profile);
     log.debug("Attempting to save loan application {}", entity);
 
-    var saved = loanApplicationRepository.save(entity);
-    log.info("Loan {} saved successfully", saved);
+    var saved = loanApplicationRepository.add(
+        entity.getAmount(),
+        entity.getPercent(),
+        entity.getTermDays(),
+        entity.getStatus().name(),
+        entity.getCustomer().getId()
+      )
+      .orElseThrow(() -> {
+        log.warn(
+          "Cannot create loan application for user {} {}. User already have opened loan in status 'NEW' or 'UNDER_REVIEW'",
+          entity.getCustomer().getFirstName(),
+          entity.getCustomer().getLastName()
+        );
+
+        return new ApplicationException(
+          HttpStatus.CONFLICT,
+          "Cannot create loan application for user %s %s. User already have opened loan in status 'NEW' or 'UNDER_REVIEW''"
+            .formatted(entity.getCustomer().getFirstName(), entity.getCustomer().getLastName())
+        );
+      });
+
+    log.info("New loan application {} saved successfully", saved);
     return loanApplicationMapper.toDto(saved);
+  }
+
+  public LoanApplicationDto changeLoanApplicationStatus(LoanApplicationStatus status, Long loanId) {
+    log.debug("Attempting to change loan application status");
+
+    var updated = loanApplicationRepository
+      .update(status.name(), loanId)
+      .map(loanApplicationMapper::toDto)
+      .orElseThrow(() -> {
+        log.warn("Status cannot be changed for non existing loan application with id={}", loanId);
+        return new ApplicationException(
+          HttpStatus.NOT_ACCEPTABLE,
+          "Status '%s' cannot be changed for non existing loan application with id=%s".formatted(status, loanId)
+        );
+      });
+
+    log.info("Status '{}' is applied for loan application with id={}", status, loanId);
+    return updated;
   }
 }

@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Value
 @Builder
 public class LoanApplicationDto {
-  @Null(message = "Loan identifier should be null. It will de mapped automatically")
   Long id;
 
   @NotNull(message = "Customer should be defined")
