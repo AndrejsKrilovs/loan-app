@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

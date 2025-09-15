@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

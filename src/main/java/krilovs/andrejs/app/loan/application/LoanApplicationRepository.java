@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;

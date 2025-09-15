@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

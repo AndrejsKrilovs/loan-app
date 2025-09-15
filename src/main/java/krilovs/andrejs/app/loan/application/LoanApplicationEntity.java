@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

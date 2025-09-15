@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.profile.ProfileDto;
 import krilovs.andrejs.app.profile.ProfileEntity;

@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.exception.ApplicationException;
 import org.springframework.data.jpa.domain.Specification;

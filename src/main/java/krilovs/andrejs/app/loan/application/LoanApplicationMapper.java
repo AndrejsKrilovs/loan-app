@@ -1,4 +1,4 @@
-package krilovs.andrejs.app.loan;
+package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.profile.ProfileMapper;
 import org.mapstruct.Mapper;
@@ -13,7 +13,7 @@ public interface LoanApplicationMapper {
   @Mapping(target = "createdAt", defaultExpression = "java(java.time.LocalDateTime.now())")
   @Mapping(
     target = "status",
-    defaultExpression = "java(krilovs.andrejs.app.loan.LoanApplicationStatus.NEW)"
+    defaultExpression = "java(krilovs.andrejs.app.loan.application.LoanApplicationStatus.NEW)"
   )
   LoanApplicationEntity toEntity(LoanApplicationDto dto);
 
