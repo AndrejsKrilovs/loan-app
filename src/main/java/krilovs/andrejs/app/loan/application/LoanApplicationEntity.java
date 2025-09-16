@@ -70,10 +70,9 @@ public class LoanApplicationEntity {
 
   @Column(
     name = "loan_application_term",
-    nullable = false,
-    precision = 3
+    nullable = false
   )
-  private BigDecimal termDays;
+  private Short termDays;
 
   @Column(
     name = "loan_application_percent",

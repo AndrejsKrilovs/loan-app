@@ -6,7 +6,7 @@ create table loan_application_table (
   loan_application_percent numeric(5,4) not null,
   loan_application_status varchar(15) default 'NEW' not null
     check (loan_application_status in ('NEW','UNDER_REVIEW','APPROVED','REJECTED','EXPIRED')),
-  loan_application_term numeric(3,0) not null,
+  loan_application_term smallint not null,
   loan_application_customer_id bigint not null,
   primary key (loan_application_id)
 );

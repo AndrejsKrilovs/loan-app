@@ -7,9 +7,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Positive;
-import krilovs.andrejs.app.profile.ProfileDto;
 import lombok.Builder;
 import lombok.Value;
 
@@ -18,7 +16,7 @@ import java.time.LocalDateTime;
 
 @Value
 @Builder
-public class LoanApplicationDto {
+public class SimpleLoanApplicationDto {
   Long id;
 
   @NotNull(message = "Customer should be defined")
@@ -57,7 +55,4 @@ public class LoanApplicationDto {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
   LocalDateTime decisionAt;
-
-  @Null(message = "Profile should be null. It will de mapped automatically")
-  ProfileDto profile;
 }

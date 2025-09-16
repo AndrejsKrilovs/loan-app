@@ -57,7 +57,7 @@ public interface LoanApplicationRepository extends JpaRepository<LoanApplication
   )
   Optional<LoanApplicationEntity> add(@Param("amount") BigDecimal amount,
                                       @Param("percent") BigDecimal percent,
-                                      @Param("term") BigDecimal term,
+                                      @Param("term") Short term,
                                       @Param("loanStatus") String loanStatus,
                                       @Param("customerId") Long customerId
   );

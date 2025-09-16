@@ -22,7 +22,15 @@ class LoanApplicationControllerTest {
   private final LoanApplicationDto dto = LoanApplicationDto.builder()
     .customerId(10L)
     .amount(BigDecimal.valueOf(1000))
-    .termDays(BigDecimal.valueOf(30))
+    .termDays(Short.valueOf("30"))
+    .percent(BigDecimal.valueOf(0.1))
+    .status(LoanApplicationStatus.APPROVED)
+    .build();
+
+  private final SimpleLoanApplicationDto simpleDto = SimpleLoanApplicationDto.builder()
+    .customerId(10L)
+    .amount(BigDecimal.valueOf(1000))
+    .termDays(Short.valueOf("30"))
     .percent(BigDecimal.valueOf(0.1))
     .status(LoanApplicationStatus.APPROVED)
     .build();
@@ -71,7 +79,7 @@ class LoanApplicationControllerTest {
       Mockito.any(LoanApplicationStatus.class),
       Mockito.anyLong()
     );
-    Mockito.when(serviceMethod).thenReturn(dto);
+    Mockito.when(serviceMethod).thenReturn(simpleDto);
 
     mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/loan-app/loan-applications")
         .contentType(MediaType.APPLICATION_JSON)

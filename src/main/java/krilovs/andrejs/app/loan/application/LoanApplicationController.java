@@ -38,7 +38,7 @@ public class LoanApplicationController {
   }
 
   @PutMapping
-  public ResponseEntity<LoanApplicationDto> changeLoanApplicationStatus(
+  public ResponseEntity<SimpleLoanApplicationDto> changeLoanApplicationStatus(
     @Valid @RequestBody ChangeStatusRequest request
   ) {
     return ResponseEntity

@@ -27,7 +27,7 @@ class LoanApplicationMapperTest {
     var dto = LoanApplicationDto.builder()
       .id(1L)
       .amount(BigDecimal.valueOf(1000))
-      .termDays(BigDecimal.valueOf(30L))
+      .termDays(Short.valueOf("30"))
       .percent(BigDecimal.valueOf(0.3))
       .status(LoanApplicationStatus.NEW)
       .createdAt(LocalDateTime.of(2025, 9, 1, 10, 0))
@@ -38,7 +38,7 @@ class LoanApplicationMapperTest {
     Assertions.assertNotNull(entity);
     Assertions.assertEquals(1L, entity.getId());
     Assertions.assertEquals(BigDecimal.valueOf(1000), entity.getAmount());
-    Assertions.assertEquals(BigDecimal.valueOf(30L), entity.getTermDays());
+    Assertions.assertEquals(Short.valueOf("30"), entity.getTermDays());
     Assertions.assertEquals(BigDecimal.valueOf(0.3), entity.getPercent());
     Assertions.assertEquals(LoanApplicationStatus.NEW, entity.getStatus());
     Assertions.assertEquals(LocalDateTime.of(2025, 9, 1, 10, 0), entity.getCreatedAt());
@@ -52,11 +52,8 @@ class LoanApplicationMapperTest {
     var dto = LoanApplicationDto.builder()
       .id(2L)
       .amount(BigDecimal.valueOf(500))
-      .termDays(BigDecimal.valueOf(15))
+      .termDays(Short.valueOf("15"))
       .percent(BigDecimal.valueOf(0.1))
-      .status(null)
-      .createdAt(null)
-      .decisionAt(null)
       .build();
 
     var entity = loanApplicationMapper.toEntity(dto);
@@ -64,7 +61,7 @@ class LoanApplicationMapperTest {
     Assertions.assertNotNull(entity);
     Assertions.assertEquals(2L, entity.getId());
     Assertions.assertEquals(BigDecimal.valueOf(500), entity.getAmount());
-    Assertions.assertEquals(BigDecimal.valueOf(15), entity.getTermDays());
+    Assertions.assertEquals(Short.valueOf("15"), entity.getTermDays());
     Assertions.assertEquals(BigDecimal.valueOf(0.1), entity.getPercent());
     Assertions.assertEquals(LoanApplicationStatus.NEW, entity.getStatus());
 
@@ -92,7 +89,7 @@ class LoanApplicationMapperTest {
     var entity = new LoanApplicationEntity();
     entity.setId(1L);
     entity.setAmount(BigDecimal.valueOf(1000));
-    entity.setTermDays(BigDecimal.valueOf(30));
+    entity.setTermDays(Short.valueOf("30"));
     entity.setPercent(BigDecimal.valueOf(0.3));
     entity.setStatus(LoanApplicationStatus.NEW);
     entity.setCreatedAt(LocalDateTime.of(2025, 9, 1, 10, 0));
@@ -106,7 +103,7 @@ class LoanApplicationMapperTest {
     Assertions.assertNotNull(dto);
     Assertions.assertEquals(1L, dto.getId());
     Assertions.assertEquals(BigDecimal.valueOf(1000), dto.getAmount());
-    Assertions.assertEquals(BigDecimal.valueOf(30), dto.getTermDays());
+    Assertions.assertEquals(Short.valueOf("30"), dto.getTermDays());
     Assertions.assertEquals(BigDecimal.valueOf(0.3), dto.getPercent());
     Assertions.assertEquals(LoanApplicationStatus.NEW, dto.getStatus());
     Assertions.assertEquals(LocalDateTime.of(2025, 9, 1, 10, 0), dto.getCreatedAt());
@@ -137,5 +134,33 @@ class LoanApplicationMapperTest {
     var dto = loanApplicationMapper.toDto(entity);
     Assertions.assertNull(dto.getCustomerId());
     Assertions.assertNull(dto.getProfile());
+  }
+
+  @Test
+  void shouldReturnNullSimpleDtoWhenEntityIsNull() {
+    Assertions.assertNull(loanApplicationMapper.toSimpleDto(null));
+  }
+
+  @Test
+  void shouldMapAllSimpleDtoFields() {
+    LoanApplicationEntity entity = new LoanApplicationEntity();
+    entity.setId(1L);
+    entity.setAmount(BigDecimal.valueOf(1000.5));
+    entity.setTermDays(Short.valueOf("30"));
+    entity.setPercent(BigDecimal.valueOf(0.15));
+    entity.setStatus(LoanApplicationStatus.APPROVED);
+    entity.setCreatedAt(LocalDateTime.of(2025, 1, 1, 10, 0));
+    entity.setDecisionAt(LocalDateTime.of(2025, 1, 2, 15, 30));
+
+    var dto = loanApplicationMapper.toSimpleDto(entity);
+
+    Assertions.assertNotNull(dto);
+    Assertions.assertEquals(1L, dto.getId());
+    Assertions.assertEquals(BigDecimal.valueOf(1000.5), dto.getAmount());
+    Assertions.assertEquals(Short.valueOf("30"), dto.getTermDays());
+    Assertions.assertEquals(BigDecimal.valueOf(0.15), dto.getPercent());
+    Assertions.assertEquals(LoanApplicationStatus.APPROVED, dto.getStatus());
+    Assertions.assertEquals(LocalDateTime.of(2025, 1, 1, 10, 0), dto.getCreatedAt());
+    Assertions.assertEquals(LocalDateTime.of(2025, 1, 2, 15, 30), dto.getDecisionAt());
   }
 }

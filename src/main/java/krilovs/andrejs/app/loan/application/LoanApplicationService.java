@@ -84,17 +84,18 @@ public class LoanApplicationService {
     return loanApplicationMapper.toDto(saved);
   }
 
-  public LoanApplicationDto changeLoanApplicationStatus(LoanApplicationStatus status, Long loanId) {
+  public SimpleLoanApplicationDto changeLoanApplicationStatus(LoanApplicationStatus status, Long loanId) {
     log.debug("Attempting to change loan application status");
 
     var updated = loanApplicationRepository
       .update(status.name(), loanId)
-      .map(loanApplicationMapper::toDto)
+      .map(loanApplicationMapper::toSimpleDto)
       .orElseThrow(() -> {
         log.warn("Status cannot be changed for non existing loan application with id={}", loanId);
         return new ApplicationException(
           HttpStatus.NOT_ACCEPTABLE,
-          "Status '%s' cannot be changed for non existing loan application with id=%s".formatted(status, loanId)
+          "Status '%s' cannot be changed for non existing loan application with id=%s"
+            .formatted(status, loanId)
         );
       });
 

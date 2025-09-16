@@ -20,4 +20,7 @@ public interface LoanApplicationMapper {
   @Mapping(target = "profile", source = "customer")
   @Mapping(target = "customerId", source = "customer.id")
   LoanApplicationDto toDto(LoanApplicationEntity entity);
+
+  @Mapping(target = "customerId", source = "customer.id")
+  SimpleLoanApplicationDto toSimpleDto(LoanApplicationEntity entity);
 }

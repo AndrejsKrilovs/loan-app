@@ -37,6 +37,7 @@ class LoanApplicationServiceTest {
 
   private ProfileEntity profile;
   private LoanApplicationDto dto;
+  private SimpleLoanApplicationDto simpleDto;
   private LoanApplicationEntity entity;
 
   @BeforeEach
@@ -44,8 +45,13 @@ class LoanApplicationServiceTest {
     dto = LoanApplicationDto.builder()
       .customerId(1L)
       .amount(BigDecimal.valueOf(1000))
-      .termDays(BigDecimal.valueOf(30))
+      .termDays(Short.valueOf("30"))
       .percent(BigDecimal.valueOf(0.1))
+      .status(LoanApplicationStatus.NEW)
+      .build();
+
+    simpleDto = SimpleLoanApplicationDto.builder()
+      .customerId(1L)
       .status(LoanApplicationStatus.NEW)
       .build();
 
@@ -142,10 +148,10 @@ class LoanApplicationServiceTest {
   @Test
   void shouldChangeLoanApplicationStatus() {
     Mockito.when(loanApplicationRepository.update("APPROVED", 1L)).thenReturn(Optional.of(entity));
-    Mockito.when(loanApplicationMapper.toDto(entity)).thenReturn(dto);
+    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
 
     var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.APPROVED, 1L);
-    Assertions.assertEquals(dto, result);
+    Assertions.assertEquals(simpleDto, result);
   }
 
   @Test
