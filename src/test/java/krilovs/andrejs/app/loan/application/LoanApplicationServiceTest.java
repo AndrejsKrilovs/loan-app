@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +53,7 @@ class LoanApplicationServiceTest {
     profile.setId(1L);
     profile.setFirstName("Andrejs");
     profile.setLastName("Krilovs");
+    profile.setBirthDate(LocalDate.of(2000, 1, 1));
 
     entity = new LoanApplicationEntity();
     entity.setCustomer(profile);
@@ -156,5 +158,23 @@ class LoanApplicationServiceTest {
 
     Assertions.assertEquals(HttpStatus.NOT_ACCEPTABLE, ex.getStatus());
     Assertions.assertTrue(ex.getMessage().contains("Status 'APPROVED' cannot be changed for non existing loan application"));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenProfileIsYoungerThan18() {
+    profile.setBirthDate(LocalDate.now().minusYears(17L));
+    Mockito.when(profileRepository.findById(1L)).thenReturn(Optional.of(profile));
+
+    var ex = Assertions.assertThrows(
+      ApplicationException.class,
+      () -> loanApplicationService.createLoanApplication(dto)
+    );
+
+    Assertions.assertEquals(HttpStatus.TOO_EARLY, ex.getStatus());
+    Assertions.assertEquals(
+      "To create loan application, requested person must be older than 18 years old.",
+      ex.getMessage()
+    );
+    Mockito.verify(loanApplicationRepository, Mockito.never()).save(Mockito.any());
   }
 }

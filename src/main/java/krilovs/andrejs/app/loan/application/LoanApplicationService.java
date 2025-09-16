@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,15 @@ public class LoanApplicationService {
           HttpStatus.NOT_FOUND, "Profile not found"
         );
       });
+
+    var ageVerification = profile.getBirthDate().isAfter(LocalDate.now().minusYears(18L));
+    if (ageVerification) {
+      log.warn("To create loan application, requested person must be older than 18 years old.");
+      throw new ApplicationException(
+        HttpStatus.TOO_EARLY,
+        "To create loan application, requested person must be older than 18 years old."
+      );
+    }
 
     var entity = loanApplicationMapper.toEntity(loanApplication);
     entity.setCustomer(profile);
