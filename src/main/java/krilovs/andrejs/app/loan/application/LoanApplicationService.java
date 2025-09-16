@@ -2,14 +2,18 @@ package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.profile.ProfileRepository;
+import krilovs.andrejs.app.risk.RiskAssessmentEntity;
+import krilovs.andrejs.app.risk.RiskAssessmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -17,7 +21,15 @@ import java.util.Map;
 public class LoanApplicationService {
   private final ProfileRepository profileRepository;
   private final LoanApplicationMapper loanApplicationMapper;
+  private final RiskAssessmentRepository riskAssessmentRepository;
   private final LoanApplicationRepository loanApplicationRepository;
+
+  private final Map<LoanApplicationStatus, Consumer<LoanApplicationEntity>> statusHandlers =
+    Map.of(
+      LoanApplicationStatus.UNDER_REVIEW, this::handleUnderReview,
+      LoanApplicationStatus.APPROVED, this::handleApproved,
+      LoanApplicationStatus.REJECTED, this::handleRejected
+    );
 
   public List<LoanApplicationDto> getLoanApplications(Map<String, String> params) {
     log.debug("Attempting to filter loans with params {} from database", params);
@@ -89,7 +101,14 @@ public class LoanApplicationService {
 
     var updated = loanApplicationRepository
       .update(status.name(), loanId)
-      .map(loanApplicationMapper::toSimpleDto)
+      .map(loanApplication -> {
+        statusHandlers.getOrDefault(
+            loanApplication.getStatus(),
+            l -> log.debug("No handler for status {}", l.getStatus())
+          )
+          .accept(loanApplication);
+        return loanApplicationMapper.toSimpleDto(loanApplication);
+      })
       .orElseThrow(() -> {
         log.warn("Status cannot be changed for non existing loan application with id={}", loanId);
         return new ApplicationException(
@@ -101,5 +120,41 @@ public class LoanApplicationService {
 
     log.info("Status '{}' is applied for loan application with id={}", status, loanId);
     return updated;
+  }
+
+  private void handleUnderReview(LoanApplicationEntity loanApplication) {
+    log.debug(
+      "Handling loan application with status 'UNDER_REVIEW' for loanApplicationId={}",
+      loanApplication.getId()
+    );
+    var riskAssessmentEntity = new RiskAssessmentEntity();
+    riskAssessmentEntity.setApplication(loanApplication);
+
+    try {
+      riskAssessmentRepository.save(riskAssessmentEntity);
+    }
+    catch (DataIntegrityViolationException violationException) {
+      throw new ApplicationException(
+        HttpStatus.CONFLICT,
+        "Loan application with id=%d already in status 'UNDER_REVIEW'".formatted(loanApplication.getId())
+      );
+    }
+  }
+
+  private void handleApproved(LoanApplicationEntity loanApplication) {
+    log.debug(
+      "Handling loan application with status 'APPROVED' for loanApplicationId={}",
+      loanApplication.getId()
+    );
+    //TODO: Создать займ
+    riskAssessmentRepository.deleteById(loanApplication.getId());
+  }
+
+  private void handleRejected(LoanApplicationEntity loanApplication) {
+    log.debug(
+      "Handling loan application with status 'REJECTED' for loanApplicationId={}",
+      loanApplication.getId()
+    );
+    riskAssessmentRepository.deleteById(loanApplication.getId());
   }
 }

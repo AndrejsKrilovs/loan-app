@@ -27,7 +27,10 @@ public interface LoanApplicationRepository extends JpaRepository<LoanApplication
     value = """
       UPDATE loan_application_table
       SET loan_application_status = :loanStatus,
-          loan_application_decisioned = NOW()
+          loan_application_decisioned = CASE
+            WHEN :loanStatus IN ('APPROVED', 'REJECTED') THEN NOW()
+            ELSE NULL
+          END
       WHERE loan_application_id = :loanId
       RETURNING *
       """,
@@ -40,7 +43,7 @@ public interface LoanApplicationRepository extends JpaRepository<LoanApplication
   @Query(
     value = """
       MERGE INTO loan_application_table lat
-      USING (VALUES (:loanStatus, :customerId)) AS la(loan_application_status, loan_application_customer_id)
+      USING (VALUES (:customerId)) AS la(loan_application_customer_id)
         ON lat.loan_application_customer_id = la.loan_application_customer_id
         AND lat.loan_application_status IN ('NEW', 'UNDER_REVIEW')
       WHEN MATCHED THEN DO NOTHING
