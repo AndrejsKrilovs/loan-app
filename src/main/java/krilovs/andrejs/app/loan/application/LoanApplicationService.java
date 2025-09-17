@@ -1,6 +1,9 @@
 package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.exception.ApplicationException;
+import krilovs.andrejs.app.loan.LoanEntity;
+import krilovs.andrejs.app.loan.LoanRepository;
+import krilovs.andrejs.app.loan.LoanStatus;
 import krilovs.andrejs.app.profile.ProfileRepository;
 import krilovs.andrejs.app.risk.RiskAssessmentEntity;
 import krilovs.andrejs.app.risk.RiskAssessmentRepository;
@@ -9,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +23,7 @@ import java.util.function.Consumer;
 @Service
 @RequiredArgsConstructor
 public class LoanApplicationService {
+  private final LoanRepository loanRepository;
   private final ProfileRepository profileRepository;
   private final LoanApplicationMapper loanApplicationMapper;
   private final RiskAssessmentRepository riskAssessmentRepository;
@@ -96,6 +101,7 @@ public class LoanApplicationService {
     return loanApplicationMapper.toDto(saved);
   }
 
+  @Transactional(rollbackFor = DataIntegrityViolationException.class)
   public SimpleLoanApplicationDto changeLoanApplicationStatus(LoanApplicationStatus status, Long loanId) {
     log.debug("Attempting to change loan application status");
 
@@ -146,7 +152,23 @@ public class LoanApplicationService {
       "Handling loan application with status 'APPROVED' for loanApplicationId={}",
       loanApplication.getId()
     );
-    //TODO: Создать займ
+
+    var loan = new LoanEntity();
+    var createdAt = loanApplication.getCreatedAt().toLocalDate();
+    loan.setApplication(loanApplication);
+    loan.setStatus(LoanStatus.ACTIVE);
+    loan.setStartDate(createdAt);
+    loan.setEndDate(createdAt.plusDays(loanApplication.getTermDays().longValue()));
+
+    var calculatedAdditionalAmount = loanRepository
+      .calculateTotalAmount(
+        loanApplication.getAmount(),
+        loanApplication.getPercent(),
+        loanApplication.getTermDays(),
+        Boolean.FALSE
+      );
+    loan.setOutstanding(loanApplication.getAmount().add(calculatedAdditionalAmount));
+    loanRepository.save(loan);
     riskAssessmentRepository.deleteById(loanApplication.getId());
   }
 

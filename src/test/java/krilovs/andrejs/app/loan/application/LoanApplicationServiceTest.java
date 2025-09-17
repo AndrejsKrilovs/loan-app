@@ -1,6 +1,7 @@
 package krilovs.andrejs.app.loan.application;
 
 import krilovs.andrejs.app.exception.ApplicationException;
+import krilovs.andrejs.app.loan.LoanRepository;
 import krilovs.andrejs.app.profile.ProfileEntity;
 import krilovs.andrejs.app.profile.ProfileRepository;
 import krilovs.andrejs.app.risk.RiskAssessmentEntity;
@@ -20,12 +21,16 @@ import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class LoanApplicationServiceTest {
+  @Mock
+  private LoanRepository loanRepository;
+
   @Mock
   private ProfileRepository profileRepository;
 
@@ -72,6 +77,9 @@ class LoanApplicationServiceTest {
     entity.setId(1L);
     entity.setCustomer(profile);
     entity.setStatus(LoanApplicationStatus.NEW);
+    entity.setCreatedAt(LocalDateTime.now());
+    entity.setTermDays(Short.valueOf("10"));
+    entity.setAmount(BigDecimal.valueOf(100));
   }
 
   @Test
@@ -237,5 +245,23 @@ class LoanApplicationServiceTest {
     var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.EXPIRED, 1L);
     Assertions.assertEquals(simpleDto, result);
     Mockito.verifyNoInteractions(riskAssessmentRepository);
+  }
+
+  @Test
+  void shouldChangeLoanApplicationStatusToApprove() {
+    entity.setStatus(LoanApplicationStatus.APPROVED);
+
+    Mockito.when(loanApplicationRepository.update("APPROVED", 1L))
+      .thenReturn(Optional.of(entity));
+    Mockito.when(
+        loanRepository.calculateTotalAmount(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())
+      )
+      .thenReturn(BigDecimal.valueOf(140));
+    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
+
+    var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.APPROVED, 1L);
+    Assertions.assertEquals(simpleDto, result);
+    Mockito.verify(loanRepository).save(Mockito.any());
+    Mockito.verify(riskAssessmentRepository).deleteById(1L);
   }
 }

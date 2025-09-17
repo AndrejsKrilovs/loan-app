@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -25,42 +26,20 @@ class ExceptionControllerTest {
 
   @Test
   void shouldHandleApplicationException() {
-    Mockito.when(request.getRequestURI())
-      .thenReturn("/api/v1/users");
+    Mockito.when(request.getRequestURI()).thenReturn("/api/v1/users");
 
-    var exception = new ApplicationException(
-      HttpStatus.BAD_REQUEST,
-      "Invalid request data"
-    );
-    var response = exceptionController.handleApplicationException(
-      exception,
-      request
-    );
+    var exception = new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid request data");
+    var response = exceptionController.handleApplicationException(exception, request);
     Assertions.assertNotNull(response);
-    Assertions.assertEquals(
-      400,
-      response.getStatusCode()
-        .value()
-    );
+    Assertions.assertEquals(400, response.getStatusCode().value());
 
     var body = response.getBody();
     Assertions.assertNotNull(body);
-    Assertions.assertEquals(
-      HttpStatus.BAD_REQUEST,
-      body.status()
-    );
-    Assertions.assertEquals(
-      "Invalid request data",
-      body.message()
-    );
-    Assertions.assertEquals(
-      "/api/v1/users",
-      body.path()
-    );
+    Assertions.assertEquals(HttpStatus.BAD_REQUEST, body.status());
+    Assertions.assertEquals("Invalid request data", body.message());
+    Assertions.assertEquals("/api/v1/users", body.path());
     Assertions.assertNotNull(body.date());
-    Assertions.assertTrue(body.date()
-      .isBefore(LocalDateTime.now()
-        .plusSeconds(1)));
+    Assertions.assertTrue(body.date().isBefore(LocalDateTime.now().plusSeconds(1)));
   }
 
   @Test
@@ -86,5 +65,35 @@ class ExceptionControllerTest {
   }
 
   record TestDto(String firstName, String phone) {
+  }
+
+  @Test
+  void shouldHandleDataIntegrityViolationException() {
+    Mockito.when(request.getRequestURI()).thenReturn("/loan-applications");
+
+    var exception = new DataIntegrityViolationException(
+      "ERROR: null value in column \"loan_application_amount\" violates not-null constraint"
+    );
+    var response = exceptionController.handleTransactionalException(exception, request);
+    Assertions.assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    Assertions.assertNotNull(response.getBody());
+    Assertions.assertEquals("null value in column 'loan_application_amount'", response.getBody().message());
+    Assertions.assertEquals("/loan-applications", response.getBody().path());
+    Assertions.assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getBody().status());
+  }
+
+  @Test
+  void shouldHandleDataIntegrityViolationExceptionWithOtherMessage() {
+    Mockito.when(request.getRequestURI()).thenReturn("/loan-applications");
+
+    var exception = new DataIntegrityViolationException(
+      "Some other error"
+    );
+    var response = exceptionController.handleTransactionalException(exception, request);
+    Assertions.assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    Assertions.assertNotNull(response.getBody());
+    Assertions.assertEquals("", response.getBody().message());
+    Assertions.assertEquals("/loan-applications", response.getBody().path());
+    Assertions.assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getBody().status());
   }
 }

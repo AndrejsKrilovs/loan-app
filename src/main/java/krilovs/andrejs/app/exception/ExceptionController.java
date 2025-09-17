@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -37,25 +39,50 @@ public class ExceptionController {
   public ResponseEntity<ExceptionResponse> handleValidationException(
     MethodArgumentNotValidException exception, HttpServletRequest request
   ) {
+
     var errors = exception
       .getBindingResult()
       .getAllErrors()
       .stream()
-      .collect(Collectors.groupingBy(
-        error -> ((FieldError) error).getField(),
-        Collectors.mapping(
-          DefaultMessageSourceResolvable::getDefaultMessage,
-          Collectors.toSet()
+      .collect(
+        Collectors.groupingBy(
+          error -> ((FieldError) error).getField(),
+          Collectors.mapping(
+            DefaultMessageSourceResolvable::getDefaultMessage,
+            Collectors.toSet()
+          )
         )
-      ));
+      );
 
     var result = new ExceptionResponse(
-      HttpStatus.valueOf(exception.getBody()
-        .getStatus()),
+      HttpStatus.valueOf(exception.getBody().getStatus()),
       LocalDateTime.now(),
       request.getRequestURI(),
       errors
     );
+    return ResponseEntity
+      .status(result.status())
+      .body(result);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ExceptionResponse> handleTransactionalException(
+    DataIntegrityViolationException exception, HttpServletRequest request
+  ) {
+    var messageString = "";
+    var pattern = Pattern.compile("null value in column \".*?\"");
+    var matcher = pattern.matcher(exception.getMessage());
+    if (matcher.find()) {
+      messageString = matcher.group().replaceAll("\"", "'");
+    }
+
+    var result = new ExceptionResponse(
+      HttpStatus.NOT_IMPLEMENTED,
+      LocalDateTime.now(),
+      request.getRequestURI(),
+      messageString
+    );
+
     return ResponseEntity
       .status(result.status())
       .body(result);

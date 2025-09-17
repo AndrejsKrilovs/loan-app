@@ -22,7 +22,6 @@ public interface LoanApplicationRepository extends JpaRepository<LoanApplication
   @EntityGraph(attributePaths = {"customer"})
   List<LoanApplicationEntity> findAll(Specification<LoanApplicationEntity> spec);
 
-  @Transactional
   @Query(
     value = """
       UPDATE loan_application_table
