@@ -23,7 +23,7 @@ class LoanApplicationControllerTest {
     .customerId(10L)
     .amount(BigDecimal.valueOf(1000))
     .termDays(Short.valueOf("30"))
-    .percent(BigDecimal.valueOf(0.1))
+    .percent(BigDecimal.TEN)
     .status(LoanApplicationStatus.APPROVED)
     .build();
 
@@ -31,7 +31,7 @@ class LoanApplicationControllerTest {
     .customerId(10L)
     .amount(BigDecimal.valueOf(1000))
     .termDays(Short.valueOf("30"))
-    .percent(BigDecimal.valueOf(0.1))
+    .percent(BigDecimal.TEN)
     .status(LoanApplicationStatus.APPROVED)
     .build();
 
@@ -68,7 +68,7 @@ class LoanApplicationControllerTest {
       .andExpect(MockMvcResultMatchers.jsonPath("$.customerId").value(10))
       .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1000))
       .andExpect(MockMvcResultMatchers.jsonPath("$.termDays").value(30))
-      .andExpect(MockMvcResultMatchers.jsonPath("$.percent").value(0.1))
+      .andExpect(MockMvcResultMatchers.jsonPath("$.percent").value(10))
       .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("APPROVED"));
   }
 
@@ -88,7 +88,7 @@ class LoanApplicationControllerTest {
       .andExpect(MockMvcResultMatchers.jsonPath("$.customerId").value(10))
       .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1000))
       .andExpect(MockMvcResultMatchers.jsonPath("$.termDays").value(30))
-      .andExpect(MockMvcResultMatchers.jsonPath("$.percent").value(0.1))
+      .andExpect(MockMvcResultMatchers.jsonPath("$.percent").value(10))
       .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("APPROVED"));
   }
 }

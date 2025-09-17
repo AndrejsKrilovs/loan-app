@@ -3,6 +3,7 @@ package krilovs.andrejs.app.loan.application;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -40,11 +41,12 @@ public class SimpleLoanApplicationDto {
 
   @NotNull(message = "Apr percent should be defined")
   @Positive(message = "Apr percent should be positive")
-  @DecimalMax(value = "1.0000", message = "Apr should not exceed 1")
+  @DecimalMin(value = "1.00", message = "Minimal Apr should be 1%")
+  @DecimalMax(value = "100.00", message = "Apr should not exceed 100%")
   @Digits(
-    integer = 1,
-    fraction = 4,
-    message = "Apr percent must have up to 1 integer and 4 fractional digits"
+    integer = 3,
+    fraction = 2,
+    message = "Apr percent must have up to 3 integer and 2 fractional digits"
   )
   BigDecimal percent;
   LoanApplicationStatus status;

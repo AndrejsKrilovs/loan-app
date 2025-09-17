@@ -118,7 +118,7 @@ public class LoanApplicationService {
         );
       });
 
-    log.info("Status '{}' is applied for loan application with id={}", status, loanId);
+    log.info("Status '{}' is applied for loan application {}", status, updated);
     return updated;
   }
 

@@ -3,6 +3,8 @@ package krilovs.andrejs.app.loan.application;
 import krilovs.andrejs.app.exception.ApplicationException;
 import krilovs.andrejs.app.profile.ProfileEntity;
 import krilovs.andrejs.app.profile.ProfileRepository;
+import krilovs.andrejs.app.risk.RiskAssessmentEntity;
+import krilovs.andrejs.app.risk.RiskAssessmentRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 
@@ -25,6 +28,9 @@ import java.util.Optional;
 class LoanApplicationServiceTest {
   @Mock
   private ProfileRepository profileRepository;
+
+  @Mock
+  private RiskAssessmentRepository riskAssessmentRepository;
 
   @Mock
   private LoanApplicationRepository loanApplicationRepository;
@@ -51,6 +57,7 @@ class LoanApplicationServiceTest {
       .build();
 
     simpleDto = SimpleLoanApplicationDto.builder()
+      .id(1L)
       .customerId(1L)
       .status(LoanApplicationStatus.NEW)
       .build();
@@ -62,6 +69,7 @@ class LoanApplicationServiceTest {
     profile.setBirthDate(LocalDate.of(2000, 1, 1));
 
     entity = new LoanApplicationEntity();
+    entity.setId(1L);
     entity.setCustomer(profile);
     entity.setStatus(LoanApplicationStatus.NEW);
   }
@@ -144,16 +152,6 @@ class LoanApplicationServiceTest {
     Assertions.assertEquals(HttpStatus.CONFLICT, ex.getStatus());
     Assertions.assertTrue(ex.getMessage().contains("User already have opened loan in status 'NEW' or 'UNDER_REVIEW'"));
   }
-
-  @Test
-  void shouldChangeLoanApplicationStatus() {
-    Mockito.when(loanApplicationRepository.update("APPROVED", 1L)).thenReturn(Optional.of(entity));
-    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
-
-    var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.APPROVED, 1L);
-    Assertions.assertEquals(simpleDto, result);
-  }
-
   @Test
   void shouldThrowExceptionWhenLoanApplicationNotFound() {
     Mockito.when(loanApplicationRepository.update("APPROVED", 1L)).thenReturn(Optional.empty());
@@ -182,5 +180,62 @@ class LoanApplicationServiceTest {
       ex.getMessage()
     );
     Mockito.verify(loanApplicationRepository, Mockito.never()).save(Mockito.any());
+  }
+
+  @Test
+  void shouldChangeLoanApplicationStatusToUnderReview() {
+    entity.setStatus(LoanApplicationStatus.UNDER_REVIEW);
+
+    Mockito.when(loanApplicationRepository.update("UNDER_REVIEW", 1L))
+      .thenReturn(Optional.of(entity));
+    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
+
+    var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.UNDER_REVIEW, 1L);
+    Assertions.assertEquals(simpleDto, result);
+    Mockito.verify(riskAssessmentRepository).save(Mockito.any(RiskAssessmentEntity.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenLoanApplicationAlreadyInReview() {
+    entity.setStatus(LoanApplicationStatus.UNDER_REVIEW);
+
+    Mockito.when(loanApplicationRepository.update("UNDER_REVIEW", 1L))
+      .thenReturn(Optional.of(entity));
+    Mockito.doThrow(DataIntegrityViolationException.class)
+      .when(riskAssessmentRepository).save(Mockito.any(RiskAssessmentEntity.class));
+
+    var ex = Assertions.assertThrows(
+      ApplicationException.class,
+      () -> loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.UNDER_REVIEW, 1L)
+    );
+
+    Assertions.assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+    Assertions.assertTrue(ex.getMessage().contains("already in status 'UNDER_REVIEW'"));
+  }
+
+  @Test
+  void shouldChangeLoanApplicationStatusToReject() {
+    entity.setStatus(LoanApplicationStatus.REJECTED);
+
+    Mockito.when(loanApplicationRepository.update("REJECTED", 1L))
+      .thenReturn(Optional.of(entity));
+    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
+
+    var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.REJECTED, 1L);
+    Assertions.assertEquals(simpleDto, result);
+    Mockito.verify(riskAssessmentRepository).deleteById(1L);
+  }
+
+  @Test
+  void shouldNotChangeStatusIfOtherStatusProvided() {
+    entity.setStatus(LoanApplicationStatus.EXPIRED);
+
+    Mockito.when(loanApplicationRepository.update("EXPIRED", 1L))
+      .thenReturn(Optional.of(entity));
+    Mockito.when(loanApplicationMapper.toSimpleDto(entity)).thenReturn(simpleDto);
+
+    var result = loanApplicationService.changeLoanApplicationStatus(LoanApplicationStatus.EXPIRED, 1L);
+    Assertions.assertEquals(simpleDto, result);
+    Mockito.verifyNoInteractions(riskAssessmentRepository);
   }
 }
